@@ -2,8 +2,9 @@ const express = require("express");
 const path = require("path");
 const db = require("./config/connection");
 const { ApolloServer } = require("apollo-server-express");
-const { typeDefs } = require("./graphql/typeDefs");
-const { resolvers } = require("./graphql/resolvers");
+const typeDefs = require("./graphql/typeDefs");
+const resolvers = require("./graphql/resolvers");
+
 const { authMiddleware } = require("./utils/auth");
 const routes = require("./routes");
 
@@ -21,18 +22,25 @@ const server = new ApolloServer({
   context: authMiddleware,
 });
 
-// integerate apollo server with express
-server.applyMiddleware({ app });
+async function startApolloServer() {
+  await server.start();
 
-// if we're in production, serve client/build as static assets
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/build")));
+  server.applyMiddleware({ app });
+
+  // if we're in production, serve client/build as static assets
+  if (process.env.NODE_ENV === "production") {
+    app.use(express.static(path.join(__dirname, "../client/build")));
+  }
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/build/index.html"));
+  });
+
+  await new Promise((resolve) => app.listen({ port: PORT }, resolve));
+  console.log(`Server listening on http://localhost:${PORT}`);
+  console.log(
+    `GraphQL endpoint: http://localhost:${PORT}${server.graphqlPath}`
+  );
 }
 
-app.use(routes);
-
-db.once("open", () => {
-  app.listen(PORT, () => console.log(`🌍 Now listening on localhost:${PORT}`));
-
-  console.log(`GraphQl: @ http://localhost:${PORT}${server.graphqlPath}`);
-});
+startApolloServer().catch((error) => console.log(error));
