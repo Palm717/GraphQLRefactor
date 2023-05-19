@@ -1,6 +1,6 @@
 # Google GraphQL Book Site
 
-Sample App is a simple, yet powerful application designed to help users manage their tasks efficiently.
+Sample App is a simple, yet powerful application designed to help users manage their digital books efficienlty 
 
 ## Getting Started
 
